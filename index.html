@@ -143,13 +143,13 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2022/04/19/Sonar-iOS-Static-Code-Analysis/">iOS SonarQube静态代码分析-支持Objective-C &amp; Swift混编</a>
+      <a class="article-title" href="/2022/04/22/Sonar-iOS-Static-Code-Analysis/">iOS SonarQube静态代码分析-支持Objective-C &amp; Swift混编</a>
     </h1>
   
 
         
-        <a href="/2022/04/19/Sonar-iOS-Static-Code-Analysis/" class="archive-article-date">
-  	<time datetime="2022-04-19T07:37:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-04-19</time>
+        <a href="/2022/04/22/Sonar-iOS-Static-Code-Analysis/" class="archive-article-date">
+  	<time datetime="2022-04-22T05:47:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-04-22</time>
 </a>
         
       </header>
@@ -157,15 +157,16 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p><a target="_blank" rel="noopener" href="https://www.sonarqube.org/">SonarQube</a>是一款用于代码质量管理的开源工具，支持20余种编程语言，最新版本为9.4（2022.4.19），包括社区版（开源且免费），开发者版本和企业版本，后两个版本都是要付费的。 SonarQube官方社区版不支持分析Objective-C和Swift，需要额外安装开源的SonarQube插件。</p>
-<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="SonarQube安装"><a href="#SonarQube安装" class="headerlink" title="SonarQube安装"></a>SonarQube安装</h3><ul>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><hr>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="SonarQube安装"><a href="#SonarQube安装" class="headerlink" title="SonarQube安装"></a>SonarQube安装</h3><ul>
 <li><p><a target="_blank" rel="noopener" href="https://docs.sonarqube.org/latest/requirements/requirements/">软硬件要求</a> </p>
 <ul>
 <li>Sever端只支持64位系统，Scanner端32位和64位均支持</li>
-<li>Java: Server端要求Java 11，Sonar Scanner要求Java 11或者Java 17</li>
-<li>数据库：PostgreSQL，Microsoft SQL Server，Oracle（SonarQube 7.9之后不再支持MySQL）</li>
+<li>Java: Server端要求Java 11，Sonar Scanner要求Java 11或者Java 17.  <a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html">Java 11下载</a></li>
+<li>数据库：PostgreSQL，Microsoft SQL Server，Oracle（SonarQube 7.9之后不再支持MySQL）。 <a target="_blank" rel="noopener" href="https://www.postgresql.org/download/">PostgreSQL下载</a></li>
 </ul>
 <blockquote>
-<p>Starting with SonarQube v7.9 we will no longer support MySQL with any edition of SonarQube.</p>
+<p>Starting with SonarQube v7.9 we will no longer support MySQL with any edition of SonarQube.（<a target="_blank" rel="noopener" href="https://community.sonarsource.com/t/end-of-life-of-mysql-support/8667%EF%BC%89">https://community.sonarsource.com/t/end-of-life-of-mysql-support/8667）</a></p>
 </blockquote>
 </li>
 <li><p><a target="_blank" rel="noopener" href="https://www.sonarqube.org/downloads/">SonarQube Server 下载</a></p>
@@ -173,10 +174,18 @@
 <li><p><a target="_blank" rel="noopener" href="https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/">Sonar Scanner 下载</a></p>
 </li>
 <li><p>本机情况</p>
+<ul>
+<li>Mac电脑：（SonarQube Sever + Scanner） macOS Monterey 12.3.1</li>
+<li>SonarQube Server： Community版， 9.4.0 </li>
+<li>Sonar Scanner： 4.7.0</li>
+<li>Java 11</li>
+<li>PostgreSQL： 14.2</li>
+</ul>
+</li>
+<li><p>配置</p>
 </li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Mac电脑：（SonarQube Sever + Scanner） macOS Monterey 12.3.1</span><br><span class="line">SonarQube Server： Community版， 9.4.0 </span><br><span class="line">Sonar Scanner： 4.7.0</span><br><span class="line">Java 11</span><br><span class="line">PostgreSQL： 14.2</span><br></pre></td></tr></table></figure>
-
+<hr>
 <h3 id="SonarQube插件安装"><a href="#SonarQube插件安装" class="headerlink" title="SonarQube插件安装"></a>SonarQube插件安装</h3><ul>
 <li><p><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift/blob/develop/README.md">工具依赖</a> </p>
 <ul>
@@ -192,17 +201,25 @@
 <li><a target="_blank" rel="noopener" href="https://github.com/terryyin/lizard">lizard</a>: 分析代码圈复杂度</li>
 </ul>
 </li>
-<li><p><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift">Sonar-Swift插件</a>：开源插件，支持Swift、Objective-C以及两者混编</p>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift">Sonar-Swift插件</a>：开源插件，支持Swift、Objective-C以及两者混编。将插件jar包拷贝到SonarQube Sever根目录&#x2F;extensions&#x2F;plugins，重启SonarQube Sever</p>
 <ul>
 <li><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift/releases">主干版本</a>: 支持SonarQube 7, 8, 不支持SonarQube 9</li>
 <li><a target="_blank" rel="noopener" href="https://github.com/estebanhiguitad/sonar-swift/releases">PR版本</a>：支持SonarQube 9</li>
 </ul>
 </li>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/xuhuisheng/sonar-l10n-zh.git">汉化插件</a>:  将插件jar包拷贝到SonarQube Sever根目录&#x2F;extensions&#x2F;plugins，重启SonarQube Sever</p>
+</li>
 <li><p>本机情况</p>
+<ul>
+<li>Xcode： 13.3</li>
+<li>OCLint： 22.02 </li>
+<li>SwiftLint： 0.46.5</li>
+<li>Sonar-Swift插件：PR版本</li>
+<li>sonar-l10n-zh-plugin：9.4</li>
+</ul>
 </li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Xcode： 13.3</span><br><span class="line">OCLint： 22.02 </span><br><span class="line">SwiftLint： 0.46.5</span><br><span class="line">Sonar-Swift插件：PR版本</span><br></pre></td></tr></table></figure>
-
+<hr>
 <h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><h2 id="其他注意事项"><a href="#其他注意事项" class="headerlink" title="其他注意事项"></a>其他注意事项</h2><ul>
 <li>部分自行下载的资源，运行时可能会被系统安全校验拦截，可以先禁掉安全校验</li>
 </ul>
@@ -219,7 +236,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2022/04/19/Sonar-iOS-Static-Code-Analysis/">展开全文 >></a>
+          <a class="article-more-a" href="/2022/04/22/Sonar-iOS-Static-Code-Analysis/">展开全文 >></a>
         </p>
       
 
@@ -326,7 +343,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
     
     	<section class="tools-section tools-section-all" q-show="innerArchive">
         <div class="search-wrap">
-          <input class="search-ipt" q-model="search" type="text" placeholder="find something…">
+          <input class="search-ipt" q-model="search" type="text" placeholder="搜索…">
           <i class="icon-search icon" q-show="search|isEmptyStr"></i>
           <i class="icon-close icon" q-show="search|isNotEmptyStr" q-on="click:clearChose(e)"></i>
         </div>
