@@ -43,7 +43,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="/assets/avatar.png" class="js-avatar">
+			<img src="/assets/setting/avatar.png" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/">Tiger</a></h1>
@@ -95,7 +95,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="/assets/avatar.png" class="js-avatar">
+				<img src="/assets/setting/avatar.png" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author">Tiger</h1>
@@ -160,8 +160,20 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><a target="_blank" rel="noopener" href="https://www.sonarqube.org/">SonarQube</a>是一款用于代码质量管理的开源工具，支持20余种编程语言，最新版本为9.4（2022.4.19），包括社区版（开源且免费），开发者版本和企业版本，后两个版本都是要付费的。 SonarQube官方社区版不支持分析Objective-C和Swift，需要额外安装开源的SonarQube插件。</p>
-<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><hr>
+        <p><a target="_blank" rel="noopener" href="https://www.sonarqube.org/">SonarQube</a>是一款用于代码质量管理的开源工具，支持20余种编程语言，最新版本为9.4（2022.4.22），包括社区版（开源且免费），开发者版本和企业版本，后两个版本都是要付费的。 SonarQube官方社区版不支持分析Objective-C和Swift，需要额外安装开源的SonarQube插件。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p><img src="/../assets/sonarqube/SQ-instance-components.png" alt="SonarQube组成" title="SonarQube组成"></p>
+<p>SonarQube由三部分组成，Server, Database和Scanner</p>
+<ul>
+<li>Server：包括Web Server，Search Server和计算引擎。<ul>
+<li>Web Server：</li>
+<li>Search Server: 基于ES（Elasticsearch），负责</li>
+<li>计算引擎：负责处理代码分析，产生报告，存储到数据库中</li>
+</ul>
+</li>
+<li>Database: </li>
+<li>Scanner:</li>
+</ul>
+<hr>
 <h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="SonarQube安装"><a href="#SonarQube安装" class="headerlink" title="SonarQube安装"></a>SonarQube安装</h3><ul>
 <li><p><a target="_blank" rel="noopener" href="https://docs.sonarqube.org/latest/requirements/requirements/">软硬件要求</a> </p>
 <ul>
@@ -187,8 +199,14 @@
 </ul>
 </li>
 <li><p>配置</p>
+<ul>
+<li>PostgreSQL数据库配置</li>
+<li>SonarQube Server配置：修改sonar.properties<br>  路径：Server安装根目录，&#x2F;conf&#x2F;sonar.properties,添加jdbc相关配置，password为数据库实际设置密码</li>
+</ul>
 </li>
 </ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sonar.jdbc.username=sonarqube</span><br><span class="line">sonar.jdbc.password=mypassword</span><br><span class="line">sonar.jdbc.url=jdbc:postgresql://localhost/sonarqube</span><br></pre></td></tr></table></figure>
+
 <hr>
 <h3 id="SonarQube插件安装"><a href="#SonarQube插件安装" class="headerlink" title="SonarQube插件安装"></a>SonarQube插件安装</h3><ul>
 <li><p><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift/blob/develop/README.md">工具依赖</a> </p>
