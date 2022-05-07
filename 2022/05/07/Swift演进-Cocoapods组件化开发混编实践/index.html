@@ -6,21 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://lihu.tech">
-  <title>iOS SonarQube静态代码分析-支持Objective-C &amp; Swift混编 | Tiger的博客</title>
+  <title>Swift演进-Cocoapods组件化开发混编实践 | Tiger的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="SonarQube是一款用于代码质量管理的开源工具，支持20余种编程语言，最新版本为9.4（2022.4.22），包括社区版（开源且免费），开发者版本和企业版本，后两个版本都是要付费的。 SonarQube官方社区版不支持分析Objective-C和Swift，需要额外安装开源的SonarQube插件。 原理 SonarQube由三部分组成，Server, Database和Scanner  Se">
+  <meta name="description" content="非组件化开发的模式下，Objective-C与Swift之间的相互调用仅存在于同一工程间，实现起来比较简单：  Swift调用Objective-C: Bridging.h桥接文件添加Objective-C头文件 Objective-C调用Swift: Swift类及方法添加@objc修饰符，Objective-C类引用-Swift.h头文件  使用Cocoapods进行组件化时，Objectiv">
 <meta property="og:type" content="article">
-<meta property="og:title" content="iOS SonarQube静态代码分析-支持Objective-C &amp; Swift混编">
-<meta property="og:url" content="https://lihu.tech/2022/04/22/Sonar-iOS-Static-Code-Analysis/index.html">
+<meta property="og:title" content="Swift演进-Cocoapods组件化开发混编实践">
+<meta property="og:url" content="https://lihu.tech/2022/05/07/Swift%E6%BC%94%E8%BF%9B-Cocoapods%E7%BB%84%E4%BB%B6%E5%8C%96%E5%BC%80%E5%8F%91%E6%B7%B7%E7%BC%96%E5%AE%9E%E8%B7%B5/index.html">
 <meta property="og:site_name" content="Tiger的博客">
-<meta property="og:description" content="SonarQube是一款用于代码质量管理的开源工具，支持20余种编程语言，最新版本为9.4（2022.4.22），包括社区版（开源且免费），开发者版本和企业版本，后两个版本都是要付费的。 SonarQube官方社区版不支持分析Objective-C和Swift，需要额外安装开源的SonarQube插件。 原理 SonarQube由三部分组成，Server, Database和Scanner  Se">
+<meta property="og:description" content="非组件化开发的模式下，Objective-C与Swift之间的相互调用仅存在于同一工程间，实现起来比较简单：  Swift调用Objective-C: Bridging.h桥接文件添加Objective-C头文件 Objective-C调用Swift: Swift类及方法添加@objc修饰符，Objective-C类引用-Swift.h头文件  使用Cocoapods进行组件化时，Objectiv">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://lihu.tech/assets/sonarqube/SQ-instance-components.png">
-<meta property="article:published_time" content="2022-04-22T05:47:24.000Z">
-<meta property="article:modified_time" content="2022-04-25T03:52:54.999Z">
+<meta property="article:published_time" content="2022-05-07T01:50:26.000Z">
+<meta property="article:modified_time" content="2022-05-07T01:53:39.991Z">
 <meta property="article:author" content="Tiger">
+<meta property="article:tag" content="Swift, Cocoapods, Objective-C">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://lihu.tech/assets/sonarqube/SQ-instance-components.png">
   
     <link rel="alternative" href="/atom.xml" title="Tiger的博客" type="application/atom+xml">
   
@@ -144,112 +143,101 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Sonar-iOS-Static-Code-Analysis" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Swift演进-Cocoapods组件化开发混编实践" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      iOS SonarQube静态代码分析-支持Objective-C &amp; Swift混编
+      Swift演进-Cocoapods组件化开发混编实践
     </h1>
   
 
         
-        <a href="/2022/04/22/Sonar-iOS-Static-Code-Analysis/" class="archive-article-date">
-  	<time datetime="2022-04-22T05:47:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-04-22</time>
+        <a href="/2022/05/07/Swift%E6%BC%94%E8%BF%9B-Cocoapods%E7%BB%84%E4%BB%B6%E5%8C%96%E5%BC%80%E5%8F%91%E6%B7%B7%E7%BC%96%E5%AE%9E%E8%B7%B5/" class="archive-article-date">
+  	<time datetime="2022-05-07T01:50:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-05-07</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><a target="_blank" rel="noopener" href="https://www.sonarqube.org/">SonarQube</a>是一款用于代码质量管理的开源工具，支持20余种编程语言，最新版本为9.4（2022.4.22），包括社区版（开源且免费），开发者版本和企业版本，后两个版本都是要付费的。 SonarQube官方社区版不支持分析Objective-C和Swift，需要额外安装开源的SonarQube插件。</p>
-<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p><img src="/../assets/sonarqube/SQ-instance-components.png" alt="SonarQube组成" title="SonarQube组成"></p>
-<p>SonarQube由三部分组成，Server, Database和Scanner</p>
+        <p>非组件化开发的模式下，Objective-C与Swift之间的相互调用仅存在于同一工程间，实现起来比较简单：</p>
 <ul>
-<li>Server：包括Web Server，Search Server和计算引擎。<ul>
-<li>Web Server：</li>
-<li>Search Server: 基于ES（Elasticsearch），负责</li>
-<li>计算引擎：负责处理代码分析，产生报告，存储到数据库中</li>
+<li>Swift调用Objective-C: Bridging.h桥接文件添加Objective-C头文件</li>
+<li>Objective-C调用Swift: Swift类及方法添加@objc修饰符，Objective-C类引用-Swift.h头文件</li>
 </ul>
-</li>
-<li>Database: </li>
-<li>Scanner:</li>
-</ul>
-<hr>
-<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="SonarQube安装"><a href="#SonarQube安装" class="headerlink" title="SonarQube安装"></a>SonarQube安装</h3><ul>
-<li><p><a target="_blank" rel="noopener" href="https://docs.sonarqube.org/latest/requirements/requirements/">软硬件要求</a> </p>
-<ul>
-<li>Sever端只支持64位系统，Scanner端32位和64位均支持</li>
-<li>Java: Server端要求Java 11，Sonar Scanner要求Java 11或者Java 17.  <a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html">Java 11下载</a></li>
-<li>数据库：PostgreSQL，Microsoft SQL Server，Oracle（SonarQube 7.9之后不再支持MySQL）。 <a target="_blank" rel="noopener" href="https://www.postgresql.org/download/">PostgreSQL下载</a></li>
+<p>使用Cocoapods进行组件化时，Objective-C与Swift之间的相互调用变得复杂起来，同一个私有Pod里面可能存在相互调用，跨Pod也可能存在相互调用的情况，此外组件可能依赖第三方SDK，当原有的纯Objective-C工程引入Swift文件后，pod install和编译过程都很可能报错。</p>
+<h2 id="静态库与动态库"><a href="#静态库与动态库" class="headerlink" title="静态库与动态库"></a>静态库与动态库</h2><h2 id="LLVM-Module"><a href="#LLVM-Module" class="headerlink" title="LLVM Module"></a>LLVM Module</h2><h2 id="Cocoadpods对Swift的支持"><a href="#Cocoadpods对Swift的支持" class="headerlink" title="Cocoadpods对Swift的支持"></a>Cocoadpods对Swift的支持</h2><ul>
+<li>use_frameworks!  ：Cocoapods 0.36 支持，pod install时，Cocoapods生成Dynamic Framework集成到主工程</li>
 </ul>
 <blockquote>
-<p>Starting with SonarQube v7.9 we will no longer support MySQL with any edition of SonarQube.（<a target="_blank" rel="noopener" href="https://community.sonarsource.com/t/end-of-life-of-mysql-support/8667%EF%BC%89">https://community.sonarsource.com/t/end-of-life-of-mysql-support/8667）</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.cocoapods.org/CocoaPods-0.36/">https://blog.cocoapods.org/CocoaPods-0.36/</a></p>
 </blockquote>
-</li>
-<li><p><a target="_blank" rel="noopener" href="https://www.sonarqube.org/downloads/">SonarQube Server 下载</a></p>
-</li>
-<li><p><a target="_blank" rel="noopener" href="https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/">Sonar Scanner 下载</a></p>
-</li>
-<li><p>本机情况</p>
 <ul>
-<li>Mac电脑：（SonarQube Sever + Scanner） macOS Monterey 12.3.1</li>
-<li>SonarQube Server： Community版， 9.4.0 </li>
-<li>Sonar Scanner： 4.7.0</li>
-<li>Java 11</li>
-<li>PostgreSQL： 14.2</li>
+<li>static_framework&#x3D;true : Cocoapods 1.4.0 支持, pod库的发布者标记，标记为true的pod库pod install时，会生成Static Framework集成到主工程</li>
 </ul>
-</li>
-<li><p>配置</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/CocoaPods/Core/pull/386">https://github.com/CocoaPods/Core/pull/386</a><br><a target="_blank" rel="noopener" href="https://github.com/CocoaPods/CocoaPods/pull/6811">https://github.com/CocoaPods/CocoaPods/pull/6811</a></p>
+</blockquote>
 <ul>
-<li>PostgreSQL数据库配置</li>
-<li>SonarQube Server配置：修改sonar.properties<br>  路径：Server安装根目录，&#x2F;conf&#x2F;sonar.properties,添加jdbc相关配置，password为数据库实际设置密码</li>
+<li>use_modular_headers!  ：Cocoapods 1.5.0 支持，pod install时，Cocoapods生成支持LLVM Module的Static Libraries集成到主工程；也可以针对单个pod使用 :modular_headers &#x3D;&gt; true</li>
 </ul>
-</li>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.cocoapods.org/CocoaPods-1.5.0/">https://blog.cocoapods.org/CocoaPods-1.5.0/</a></p>
+</blockquote>
+<ul>
+<li>use_frameworks! :linkage&#x3D;&gt; :static     Cocoapods 1.9.0 支持, pod install时，Cocoapods生成Static Frameworks集成到主工程</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sonar.jdbc.username=sonarqube</span><br><span class="line">sonar.jdbc.password=mypassword</span><br><span class="line">sonar.jdbc.url=jdbc:postgresql://localhost/sonarqube</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/CocoaPods/CocoaPods/issues/9099">https://github.com/CocoaPods/CocoaPods/issues/9099</a></p>
+</blockquote>
+<h2 id="Cocoapods方案选择"><a href="#Cocoapods方案选择" class="headerlink" title="Cocoapods方案选择"></a>Cocoapods方案选择</h2><ul>
+<li>Dynamic Frameworks方案：use_frameworks! + static_framework&#x3D;true</li>
+</ul>
+<p>工程中Podfile增加use_frameworks!修饰，pod install时，Cocoapods将依赖的各个pod库生成Dynamic Framework集成到主工程。</p>
+<p>当某个pod库以vendored_framework方式集成了静态第三方SDK时，pod install会报下面的错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">target has transitive dependencies that include statically linked binaries</span><br></pre></td></tr></table></figure>
 
-<hr>
-<h3 id="SonarQube插件安装"><a href="#SonarQube插件安装" class="headerlink" title="SonarQube插件安装"></a>SonarQube插件安装</h3><ul>
-<li><p><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift/blob/develop/README.md">工具依赖</a> </p>
+<p>这是因为Cocoapods生成的Dynamic Framework包含了静态库，动态库不能依赖静态库，触发了Cocoapods的校验程序。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">def verify_no_static_framework_transitive_dependencies</span><br><span class="line">   aggregate_targets.each do |aggregate_target|</span><br><span class="line">     aggregate_target.user_build_configurations.each_key do |config|</span><br><span class="line">       pod_targets = aggregate_target.pod_targets_for_build_configuration(config)</span><br><span class="line">       built_targets, unbuilt_targets = pod_targets.partition(&amp;:should_build?)</span><br><span class="line">       dynamic_pod_targets = built_targets.select(&amp;:build_as_dynamic?)</span><br><span class="line"></span><br><span class="line">       dependencies = dynamic_pod_targets.flat_map(&amp;:dependent_targets).uniq</span><br><span class="line">       depended_upon_targets = unbuilt_targets &amp; dependencies</span><br><span class="line"></span><br><span class="line">       static_libs = depended_upon_targets.flat_map(&amp;:file_accessors).flat_map(&amp;:vendored_static_artifacts)</span><br><span class="line">       unless static_libs.empty?</span><br><span class="line">         raise Informative, &quot;The &#x27;#&#123;aggregate_target.label&#125;&#x27; target has &quot; \</span><br><span class="line">           &quot;transitive dependencies that include statically linked binaries: (#&#123;static_libs.to_sentence&#125;)&quot;</span><br><span class="line">       end</span><br><span class="line"></span><br><span class="line">       static_deps = dynamic_pod_targets.flat_map(&amp;:recursive_dependent_targets).uniq.select(&amp;:build_as_static?)</span><br><span class="line">       unless static_deps.empty?</span><br><span class="line">         raise Informative, &quot;The &#x27;#&#123;aggregate_target.label&#125;&#x27; target has &quot; \</span><br><span class="line">           &quot;transitive dependencies that include statically linked binaries: (#&#123;static_deps.flat_map(&amp;:name).to_sentence&#125;)&quot;</span><br><span class="line">       end</span><br><span class="line">     end</span><br><span class="line">   end</span><br><span class="line"> end</span><br></pre></td></tr></table></figure>
+<p>Cocoapods 1.4.0版本增加的static_framework属性可以解决这个问题，该属性是由pod发布者添加，当pod标记了static_framework&#x3D;true时，pod install时该Pod库会被生成Static Framework，从而避免出现动态库依赖静态库的情况。</p>
+<p>该方法的缺点是对Pod生产方侵入性较强，在pod依赖层级较多，vendored_framework中含有静态库的pod较多的情况下，标记的工程量会很大。</p>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://oclint.org/">OCLint</a>: 需要匹配LLVM版本，LLVM13需要使用OCLint 21.10及以上版本，低版本会报could not build module ‘Foundation’的错误。brew install oclint安装的版本可能不是最新，可下载安装<a target="_blank" rel="noopener" href="https://github.com/oclint/oclint/releases">预编译二进制</a>，参考<a target="_blank" rel="noopener" href="https://docs.oclint.org/en/stable/intro/installation.html">官方安装说明</a></li>
+<li>Static Libraries方案： use_modular_headers! 或 :modular_headers &#x3D;&gt; true</li>
+<li>Static Frameworks方案：use_frameworks! :linkage&#x3D;&gt; :static</li>
 </ul>
-<blockquote>
-<p>We usually have this type of error during Xcode major releases. To solve it, OCLint needs to be built with the same LLVM version as the Xcode. This year, Xcode 13 requires LLVM 13.0.0, which is not officially released to date. We’ll have to wait until that happens first. (<a target="_blank" rel="noopener" href="https://github.com/oclint/oclint/issues/616">https://github.com/oclint/oclint/issues/616</a>)</p>
-</blockquote>
+<h2 id="Cocoapods组件化混编实践"><a href="#Cocoapods组件化混编实践" class="headerlink" title="Cocoapods组件化混编实践"></a>Cocoapods组件化混编实践</h2><p>通过综合对比，use_modular_headers! 或 :modular_headers &#x3D;&gt; true方式代价相对较小，也较为灵活。</p>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://github.com/realm/SwiftLint">SwiftLint</a>： SwiftLint 是一个用于强制检查 Swift 代码风格和规定的一个工具，基本上以 <a target="_blank" rel="noopener" href="https://github.com/raywenderlich/swift-style-guide">Ray Wenderlich’s Swift 代码风格指南</a>为基础.</li>
-<li><a target="_blank" rel="noopener" href="https://github.com/xcpretty/xcpretty">xcpretty</a>： 用于对xcodebuild的输出进行格式化，并包含输出report功能。</li>
-<li><a target="_blank" rel="noopener" href="https://github.com/SlatherOrg/slather">slather</a>: 生成测试覆盖率报告</li>
-<li><a target="_blank" rel="noopener" href="https://github.com/terryyin/lizard">lizard</a>: 分析代码圈复杂度</li>
+<li>存量Objective-C头文件引用Module化</li>
+<li>存量依赖的静态Framework支持Module</li>
+<li>存量的静态Lib</li>
+<li>跨Pod的Objective-C与Swift相互调用：使用Module方式引用<ul>
+<li>Objective-C调用Swift</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@import Pod模块名;</span><br></pre></td></tr></table></figure>
+<p>  支持LLLVM Module的Objective-C 静态Lib（.a）可以直接被Swift调用，当使用use_modular_headers!时，pod install会生成支持Module的.a（生成umbrella头文件和modulemap文件），所以Swift可以使用import的方式调用跨pod的Objective-C类。</p>
+<ul>
+<li>Swift调用Objective-C</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">import Pod模块名</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Objective-C调用Swift则需要-Swift.h文件，Cocoapods在Copy generated compatibility header函数里会生成{PRODUCT_MODULE_NAME}-Swift.h文件，并将该文件写入umbrella文件中，因此Objective-C可以使用@import的方式调用Swift，具体实现如下：</p>
+<pre><code><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">COMPATIBILITY_HEADER_PATH=&quot;$&#123;BUILT_PRODUCTS_DIR&#125;/Swift Compatibility Header/$&#123;PRODUCT_MODULE_NAME&#125;-Swift.h&quot;</span><br><span class="line">MODULE_MAP_PATH=&quot;$&#123;BUILT_PRODUCTS_DIR&#125;/$&#123;PRODUCT_MODULE_NAME&#125;.modulemap&quot;</span><br><span class="line"></span><br><span class="line">ditto &quot;$&#123;DERIVED_SOURCES_DIR&#125;/$&#123;PRODUCT_MODULE_NAME&#125;-Swift.h&quot; &quot;$&#123;COMPATIBILITY_HEADER_PATH&#125;&quot;</span><br><span class="line">ditto &quot;$&#123;PODS_ROOT&#125;/Headers/Public/WatermelonLib/WatermelonLib.modulemap&quot; &quot;$&#123;MODULE_MAP_PATH&#125;&quot;</span><br><span class="line">ditto &quot;$&#123;PODS_ROOT&#125;/Headers/Public/WatermelonLib/WatermelonLib-umbrella.h&quot; &quot;$&#123;BUILT_PRODUCTS_DIR&#125;&quot;</span><br></pre></td></tr></table></figure>
+</code></pre>
+<ul>
+<li><p>同Pod的Objective-C与Swift相互调用：</p>
+<ul>
+<li>Objective-C调用Swift</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#import &quot;本Pod模块名-Swift.h&quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Swift调用Objective-C</li>
 </ul>
 </li>
-<li><p><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift">Sonar-Swift插件</a>：开源插件，支持Swift、Objective-C以及两者混编。将插件jar包拷贝到SonarQube Sever根目录&#x2F;extensions&#x2F;plugins，重启SonarQube Sever</p>
-<ul>
-<li><a target="_blank" rel="noopener" href="https://github.com/Idean/sonar-swift/releases">主干版本</a>: 支持SonarQube 7, 8, 不支持SonarQube 9</li>
-<li><a target="_blank" rel="noopener" href="https://github.com/estebanhiguitad/sonar-swift/releases">PR版本</a>：支持SonarQube 9</li>
 </ul>
-</li>
-<li><p><a target="_blank" rel="noopener" href="https://github.com/xuhuisheng/sonar-l10n-zh.git">汉化插件</a>:  将插件jar包拷贝到SonarQube Sever根目录&#x2F;extensions&#x2F;plugins，重启SonarQube Sever</p>
-</li>
-<li><p>本机情况</p>
-<ul>
-<li>Xcode： 13.3</li>
-<li>OCLint： 22.02 </li>
-<li>SwiftLint： 0.46.5</li>
-<li>Sonar-Swift插件：PR版本</li>
-<li>sonar-l10n-zh-plugin：9.4</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><h2 id="其他注意事项"><a href="#其他注意事项" class="headerlink" title="其他注意事项"></a>其他注意事项</h2><ul>
-<li>部分自行下载的资源，运行时可能会被系统安全校验拦截，可以先禁掉安全校验</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo spctl --master-disable</span><br></pre></td></tr></table></figure>
 
       
 
@@ -258,6 +246,17 @@
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Swift, Cocoapods, Objective-C</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 
       
@@ -271,15 +270,11 @@
   
 <nav id="article-nav">
   
-    <a href="/2022/05/07/Swift%E6%BC%94%E8%BF%9B-Cocoapods%E7%BB%84%E4%BB%B6%E5%8C%96%E5%BC%80%E5%8F%91%E6%B7%B7%E7%BC%96%E5%AE%9E%E8%B7%B5/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Swift演进-Cocoapods组件化开发混编实践
-        
-      </div>
-    </a>
   
+    <a href="/2022/04/22/Sonar-iOS-Static-Code-Analysis/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">iOS SonarQube静态代码分析-支持Objective-C &amp; Swift混编</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 

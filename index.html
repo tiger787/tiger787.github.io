@@ -140,6 +140,154 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-Swift演进-Cocoapods组件化开发混编实践" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/05/07/Swift%E6%BC%94%E8%BF%9B-Cocoapods%E7%BB%84%E4%BB%B6%E5%8C%96%E5%BC%80%E5%8F%91%E6%B7%B7%E7%BC%96%E5%AE%9E%E8%B7%B5/">Swift演进-Cocoapods组件化开发混编实践</a>
+    </h1>
+  
+
+        
+        <a href="/2022/05/07/Swift%E6%BC%94%E8%BF%9B-Cocoapods%E7%BB%84%E4%BB%B6%E5%8C%96%E5%BC%80%E5%8F%91%E6%B7%B7%E7%BC%96%E5%AE%9E%E8%B7%B5/" class="archive-article-date">
+  	<time datetime="2022-05-07T01:50:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-05-07</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>非组件化开发的模式下，Objective-C与Swift之间的相互调用仅存在于同一工程间，实现起来比较简单：</p>
+<ul>
+<li>Swift调用Objective-C: Bridging.h桥接文件添加Objective-C头文件</li>
+<li>Objective-C调用Swift: Swift类及方法添加@objc修饰符，Objective-C类引用-Swift.h头文件</li>
+</ul>
+<p>使用Cocoapods进行组件化时，Objective-C与Swift之间的相互调用变得复杂起来，同一个私有Pod里面可能存在相互调用，跨Pod也可能存在相互调用的情况，此外组件可能依赖第三方SDK，当原有的纯Objective-C工程引入Swift文件后，pod install和编译过程都很可能报错。</p>
+<h2 id="静态库与动态库"><a href="#静态库与动态库" class="headerlink" title="静态库与动态库"></a>静态库与动态库</h2><h2 id="LLVM-Module"><a href="#LLVM-Module" class="headerlink" title="LLVM Module"></a>LLVM Module</h2><h2 id="Cocoadpods对Swift的支持"><a href="#Cocoadpods对Swift的支持" class="headerlink" title="Cocoadpods对Swift的支持"></a>Cocoadpods对Swift的支持</h2><ul>
+<li>use_frameworks!  ：Cocoapods 0.36 支持，pod install时，Cocoapods生成Dynamic Framework集成到主工程</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.cocoapods.org/CocoaPods-0.36/">https://blog.cocoapods.org/CocoaPods-0.36/</a></p>
+</blockquote>
+<ul>
+<li>static_framework&#x3D;true : Cocoapods 1.4.0 支持, pod库的发布者标记，标记为true的pod库pod install时，会生成Static Framework集成到主工程</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/CocoaPods/Core/pull/386">https://github.com/CocoaPods/Core/pull/386</a><br><a target="_blank" rel="noopener" href="https://github.com/CocoaPods/CocoaPods/pull/6811">https://github.com/CocoaPods/CocoaPods/pull/6811</a></p>
+</blockquote>
+<ul>
+<li>use_modular_headers!  ：Cocoapods 1.5.0 支持，pod install时，Cocoapods生成支持LLVM Module的Static Libraries集成到主工程；也可以针对单个pod使用 :modular_headers &#x3D;&gt; true</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.cocoapods.org/CocoaPods-1.5.0/">https://blog.cocoapods.org/CocoaPods-1.5.0/</a></p>
+</blockquote>
+<ul>
+<li>use_frameworks! :linkage&#x3D;&gt; :static     Cocoapods 1.9.0 支持, pod install时，Cocoapods生成Static Frameworks集成到主工程</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/CocoaPods/CocoaPods/issues/9099">https://github.com/CocoaPods/CocoaPods/issues/9099</a></p>
+</blockquote>
+<h2 id="Cocoapods方案选择"><a href="#Cocoapods方案选择" class="headerlink" title="Cocoapods方案选择"></a>Cocoapods方案选择</h2><ul>
+<li>Dynamic Frameworks方案：use_frameworks! + static_framework&#x3D;true</li>
+</ul>
+<p>工程中Podfile增加use_frameworks!修饰，pod install时，Cocoapods将依赖的各个pod库生成Dynamic Framework集成到主工程。</p>
+<p>当某个pod库以vendored_framework方式集成了静态第三方SDK时，pod install会报下面的错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">target has transitive dependencies that include statically linked binaries</span><br></pre></td></tr></table></figure>
+
+<p>这是因为Cocoapods生成的Dynamic Framework包含了静态库，动态库不能依赖静态库，触发了Cocoapods的校验程序。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">def verify_no_static_framework_transitive_dependencies</span><br><span class="line">   aggregate_targets.each do |aggregate_target|</span><br><span class="line">     aggregate_target.user_build_configurations.each_key do |config|</span><br><span class="line">       pod_targets = aggregate_target.pod_targets_for_build_configuration(config)</span><br><span class="line">       built_targets, unbuilt_targets = pod_targets.partition(&amp;:should_build?)</span><br><span class="line">       dynamic_pod_targets = built_targets.select(&amp;:build_as_dynamic?)</span><br><span class="line"></span><br><span class="line">       dependencies = dynamic_pod_targets.flat_map(&amp;:dependent_targets).uniq</span><br><span class="line">       depended_upon_targets = unbuilt_targets &amp; dependencies</span><br><span class="line"></span><br><span class="line">       static_libs = depended_upon_targets.flat_map(&amp;:file_accessors).flat_map(&amp;:vendored_static_artifacts)</span><br><span class="line">       unless static_libs.empty?</span><br><span class="line">         raise Informative, &quot;The &#x27;#&#123;aggregate_target.label&#125;&#x27; target has &quot; \</span><br><span class="line">           &quot;transitive dependencies that include statically linked binaries: (#&#123;static_libs.to_sentence&#125;)&quot;</span><br><span class="line">       end</span><br><span class="line"></span><br><span class="line">       static_deps = dynamic_pod_targets.flat_map(&amp;:recursive_dependent_targets).uniq.select(&amp;:build_as_static?)</span><br><span class="line">       unless static_deps.empty?</span><br><span class="line">         raise Informative, &quot;The &#x27;#&#123;aggregate_target.label&#125;&#x27; target has &quot; \</span><br><span class="line">           &quot;transitive dependencies that include statically linked binaries: (#&#123;static_deps.flat_map(&amp;:name).to_sentence&#125;)&quot;</span><br><span class="line">       end</span><br><span class="line">     end</span><br><span class="line">   end</span><br><span class="line"> end</span><br></pre></td></tr></table></figure>
+<p>Cocoapods 1.4.0版本增加的static_framework属性可以解决这个问题，该属性是由pod发布者添加，当pod标记了static_framework&#x3D;true时，pod install时该Pod库会被生成Static Framework，从而避免出现动态库依赖静态库的情况。</p>
+<p>该方法的缺点是对Pod生产方侵入性较强，在pod依赖层级较多，vendored_framework中含有静态库的pod较多的情况下，标记的工程量会很大。</p>
+<ul>
+<li>Static Libraries方案： use_modular_headers! 或 :modular_headers &#x3D;&gt; true</li>
+<li>Static Frameworks方案：use_frameworks! :linkage&#x3D;&gt; :static</li>
+</ul>
+<h2 id="Cocoapods组件化混编实践"><a href="#Cocoapods组件化混编实践" class="headerlink" title="Cocoapods组件化混编实践"></a>Cocoapods组件化混编实践</h2><p>通过综合对比，use_modular_headers! 或 :modular_headers &#x3D;&gt; true方式代价相对较小，也较为灵活。</p>
+<ul>
+<li>存量Objective-C头文件引用Module化</li>
+<li>存量依赖的静态Framework支持Module</li>
+<li>存量的静态Lib</li>
+<li>跨Pod的Objective-C与Swift相互调用：使用Module方式引用<ul>
+<li>Objective-C调用Swift</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@import Pod模块名;</span><br></pre></td></tr></table></figure>
+<p>  支持LLLVM Module的Objective-C 静态Lib（.a）可以直接被Swift调用，当使用use_modular_headers!时，pod install会生成支持Module的.a（生成umbrella头文件和modulemap文件），所以Swift可以使用import的方式调用跨pod的Objective-C类。</p>
+<ul>
+<li>Swift调用Objective-C</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">import Pod模块名</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Objective-C调用Swift则需要-Swift.h文件，Cocoapods在Copy generated compatibility header函数里会生成{PRODUCT_MODULE_NAME}-Swift.h文件，并将该文件写入umbrella文件中，因此Objective-C可以使用@import的方式调用Swift，具体实现如下：</p>
+<pre><code><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">COMPATIBILITY_HEADER_PATH=&quot;$&#123;BUILT_PRODUCTS_DIR&#125;/Swift Compatibility Header/$&#123;PRODUCT_MODULE_NAME&#125;-Swift.h&quot;</span><br><span class="line">MODULE_MAP_PATH=&quot;$&#123;BUILT_PRODUCTS_DIR&#125;/$&#123;PRODUCT_MODULE_NAME&#125;.modulemap&quot;</span><br><span class="line"></span><br><span class="line">ditto &quot;$&#123;DERIVED_SOURCES_DIR&#125;/$&#123;PRODUCT_MODULE_NAME&#125;-Swift.h&quot; &quot;$&#123;COMPATIBILITY_HEADER_PATH&#125;&quot;</span><br><span class="line">ditto &quot;$&#123;PODS_ROOT&#125;/Headers/Public/WatermelonLib/WatermelonLib.modulemap&quot; &quot;$&#123;MODULE_MAP_PATH&#125;&quot;</span><br><span class="line">ditto &quot;$&#123;PODS_ROOT&#125;/Headers/Public/WatermelonLib/WatermelonLib-umbrella.h&quot; &quot;$&#123;BUILT_PRODUCTS_DIR&#125;&quot;</span><br></pre></td></tr></table></figure>
+</code></pre>
+<ul>
+<li><p>同Pod的Objective-C与Swift相互调用：</p>
+<ul>
+<li>Objective-C调用Swift</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#import &quot;本Pod模块名-Swift.h&quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Swift调用Objective-C</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Swift, Cocoapods, Objective-C</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2022/05/07/Swift%E6%BC%94%E8%BF%9B-Cocoapods%E7%BB%84%E4%BB%B6%E5%8C%96%E5%BC%80%E5%8F%91%E6%B7%B7%E7%BC%96%E5%AE%9E%E8%B7%B5/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-Sonar-iOS-Static-Code-Analysis" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -375,6 +523,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
             <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
           </label>
           <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Swift, Cocoapods, Objective-C</a>
+              </li>
             
             <div class="clearfix"></div>
           </ul>
